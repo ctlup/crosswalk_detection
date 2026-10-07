@@ -1,0 +1,5 @@
+[tool.pytest.ini_options]
+# Keeps `python -m pytest` working without setting PYTHONPATH by hand.
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = "-q"

@@ -1,0 +1,4 @@
+-r requirements.txt
+torch
+torchvision
+transformers>=4.40,<5

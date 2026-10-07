@@ -1,0 +1,55 @@
+# Python environment and caches
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+
+# Local-only overrides (machine-specific files are excluded via
+# .git/info/exclude, which is not part of the repository)
+*.local.*
+*.local
+
+# ---------------------------------------------------------------------------
+# NEVER TRACKED. Dashcam footage and anything derived from it is personal data
+# (identifiable pedestrians, legible number plates; see LICENSING.md section 4)
+# and must not leave this PC. Model weights are excluded for size and licence
+# reasons. These are whole-directory rules on purpose: a narrower pattern once
+# left data/frames/ trackable.
+# ---------------------------------------------------------------------------
+data/
+samples/
+runs/
+models/
+
+# Media and weights anywhere in the tree, as a second line of defence
+*.mp4
+*.m4v
+*.avi
+*.mov
+*.mkv
+*.webm
+*.jpg
+*.jpeg
+*.png
+*.bmp
+*.gif
+*.tif
+*.tiff
+*.webp
+*.pt
+*.pth
+*.onnx
+*.engine
+*.trt
+*.plan
+*.safetensors
+*.bin
+*.npy
+*.npz
+*.pkl
+
+# Secrets and local overrides
+.env
+*.env
+config.local.yaml

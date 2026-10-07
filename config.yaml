@@ -1,0 +1,58 @@
+# Source: dashcam video file, USB/webcam index, or a stream URL (RTSP / dashcam Wi-Fi).
+# Keep credentials out of git: set CAMERA_URL in your environment instead.
+source: "samples/dashcam.mp4"
+
+# Scope: crosswalks only for now. sidewalk / person / vehicle stay defined in
+# src/ped_lane/classes.py and can be switched back on here without code changes.
+active_classes: ["crosswalk"]
+
+# Mask2Former teacher (pseudo-labelling + accuracy reference). OFF and not
+# downloaded: the released weights are CC BY-NC 4.0, pending legal clearance.
+# See LICENSING.md. Enabling this triggers an 826 MB download.
+teacher:
+  enabled: false
+  checkpoint: "facebook/mask2former-swin-large-mapillary-vistas-panoptic"
+  device: "auto"
+  fp16: true
+
+# Frame extraction. exclude_ranges drops seconds outright, for content the
+# geometric redaction cannot remove. Found by reviewing all 180 extracted
+# frames one by one: a vehicle occupant's hand enters frame at ~8s and ~29s,
+# ABOVE the ignore_region mask. Masking that high would cost most of the
+# right-hand roadway, so these seconds are dropped. Neither contains a
+# crosswalk. See LICENSING.md.
+extraction:
+  exclude_ranges:
+    - [6.5, 9.5]
+    - [27.5, 30.5]
+
+model:
+  weights: "models/crosswalk-seg.pt"   # custom-trained student; falls back to yolo11n-seg.pt for plumbing tests
+  imgsz: 640                           # native video is 1920x1080: benchmark 640 vs 960 (distant crosswalks are thin)
+  conf: 0.35
+  device: "auto"                       # "auto" = CUDA if an NVIDIA GPU is available, else CPU; or force "cpu" / "0"
+
+stream:
+  reconnect_seconds: 3
+  max_fps: 15                          # cap inference rate; reader always keeps only the latest frame
+
+# Tailored to the reference clip (Nextbase-style wide-angle dashcam, 1920x1080, ~30 fps).
+# All fractions refer to the ORIGINAL full frame. Tune after looking at more footage.
+dashcam:
+  # Measured, not guessed: optical-flow focus-of-expansion over 149 frame pairs
+  # spanning the clip puts the vanishing point at median 0.678H (p01 0.557,
+  # p99 0.761, extreme 0.448); pitch swing is 0.20H. 0.40 leaves 169 px of
+  # headroom above the p01 VP and stays below even the extreme. Applied at
+  # training/inference time only -- NEVER baked into extracted frames.
+  crop_top_fraction: 0.40
+  crop_bottom_fraction: 0.10           # removes car hood + burned-in text bar (brand, GPS, speed, date)
+  ignore_regions:                      # fixed obstructions, blacked out before inference
+    - {x0: 0.87, y0: 0.76, x1: 1.0, y1: 1.0}   # blue/white windshield mount, bottom-right corner
+
+output:
+  show_window: true
+  save_video: null                     # e.g. "runs/out.mp4"
+  overlay_alpha: 0.4
+
+temporal:
+  smoothing_frames: 3                  # short smoothing only: the camera moves, so long averaging smears masks
